@@ -22,7 +22,7 @@ class DatasetTokenizer:
         for word_ind in word_inds:
             if word_ind is None:
                 row_labels.append(-100)
-            else:  # Only label the first token of a given word.
+            else:
                 row_labels.append(labels[word_ind])
 
         return [row_tokens, row_labels, word_inds]
