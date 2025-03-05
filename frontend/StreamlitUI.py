@@ -8,8 +8,10 @@ class StreamlitUI:
     def __init__(self) -> None:
         self.db_handler = DBConnectionHandler("data/labeled_dataset.csv")
         self.visualizer = Visualizer()
-        self.pages = {"Home": self.home_page,
-                      "NER statistic": self.NER_statistic_page}
+        self.pages = {"NER Sentiment": self.NER_sentiment_page,
+                      "Home": self.home_page,
+                      "NER statistic": self.NER_statistic_page,
+                      }
 
         self.days = {"All the time": 0, "Last day": 1,
                      "Last week": 7, "Last month": 30, "Last year": 365}
@@ -23,15 +25,23 @@ class StreamlitUI:
         st.markdown(
             """
         This is an application for data visualisation of twits.
-
         """
         )
+        number_of_tweets = self.db_handler.get_number_of_twits()
+        st.write("Number of collected tweets:", number_of_tweets)
 
     def NER_statistic_page(self):
         st.write("# Page with NER statistic...")
         period = st.selectbox("Select time period", self.days.keys())
         statistc = self.db_handler.get_NER_distrubution(self.days[period])
-        self.visualizer.barplot_NER_distribution(statistc)
+        self.visualizer.barplot(statistc, "NER tags")
+
+    def NER_sentiment_page(self):
+        NER_tags = self.db_handler.get_NER_tags()
+        selected_tag = st.selectbox("Select NER tag", NER_tags)
+        statistc = self.db_handler.get_sentiment_statistic_for_NER(
+            selected_tag)
+        self.visualizer.barplot(statistc, "Sentiment tags")
 
 
 if __name__ == "__main__":
