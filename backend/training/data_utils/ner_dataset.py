@@ -4,8 +4,9 @@ import torch.nn.functional as F
 
 
 class NERDataset:
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame, extra_labels=False):
         self.data = data
+        self.extra_labels = extra_labels
 
     def __len__(self):
         return len(self.data.index)
@@ -13,7 +14,9 @@ class NERDataset:
     def __getitem__(self, index):
         tokens = torch.tensor(self.data['tokens'][index], dtype=torch.long)
         labels = torch.tensor(self.data['labels'][index], dtype=torch.long)
-        return tokens, labels
+        if not self.extra_labels:
+            return tokens, labels
+        return tokens, labels, torch.tensor(self.data['extra_labels'][index], dtype=torch.long)
 
 
 class DataCollator:
@@ -33,5 +36,7 @@ class DataCollator:
 
         padded_labels = [self.pad_fn(sample[1], self.label_pad_id, max_len) for sample in data]
         batch['labels'] = torch.stack(padded_labels)
+        if len(data[0]) == 3:
+            batch['extra_labels'] = torch.stack([self.pad_fn(sample[2], 0, max_len) for sample in data])
         return batch
 
