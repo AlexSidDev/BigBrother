@@ -2,6 +2,21 @@ from transformers import AutoModelForTokenClassification, BertForTokenClassifica
 import torch.nn as nn
 
 
+def to_device(batch: dict, device: str):
+    return {k: v.to(device) for k, v in batch.items()}
+
+
+def preds_to_bio(preds: list, word_inds: list, labels_mapping: dict):
+    bio_preds = []
+    previous_ind = None
+    for i, pred in enumerate(preds):
+        if word_inds[i] is None or word_inds[i] == previous_ind:
+            continue
+        bio_preds.append(labels_mapping[pred])
+        previous_ind = word_inds[i]
+    return bio_preds
+
+
 class ModelWithEmbeds(nn.Module):
     def __init__(self, model: BertForTokenClassification, tokens: int):
         super().__init__()

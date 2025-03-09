@@ -1,23 +1,6 @@
-import seqeval
 import torch
-import numpy as np
-import evaluate
 from tqdm import tqdm
-
-
-def to_device(batch: dict, device: str):
-    return {k: v.to(device) for k, v in batch.items()}
-
-
-def preds_to_bio(preds: list, word_inds: list, labels_mapping: dict):
-    bio_preds = []
-    previous_ind = None
-    for i, pred in enumerate(preds):
-        if word_inds[i] is None or word_inds[i] == previous_ind:
-            continue
-        bio_preds.append(labels_mapping[pred])
-        previous_ind = word_inds[i]
-    return bio_preds
+from backend.model_utils import to_device, preds_to_bio
 
 
 def inference(model, val_dataloader, word_inds, labels_mapping, device='cuda'):
