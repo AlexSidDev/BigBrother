@@ -8,10 +8,10 @@ class StreamlitUI:
     def __init__(self) -> None:
         self.db_handler = DBConnectionHandler("data/labeled_dataset.csv")
         self.visualizer = Visualizer()
-        self.pages = {"NER Sentiment": self.NER_sentiment_page,
-                      "Home": self.home_page,
+        self.pages = {"Home": self.home_page,
                       "NER statistic": self.NER_statistic_page,
-                      }
+                      "NER Sentiment": self.NER_sentiment_page,
+                      "N twits": self.colorful_twits_for_category_page}
 
         self.days = {"All the time": 0, "Last day": 1,
                      "Last week": 7, "Last month": 30, "Last year": 365}
@@ -42,6 +42,17 @@ class StreamlitUI:
         statistc = self.db_handler.get_sentiment_statistic_for_NER(
             selected_tag)
         self.visualizer.barplot(statistc, "Sentiment tags")
+
+    def colorful_twits_for_category_page(self):
+        catogories = self.db_handler.get_categories()
+        selected_category = st.selectbox("Select category", catogories)
+        data = self.db_handler.get_n_twits_for_categoty(
+            selected_category)
+        
+        self.visualizer.visualize_categories()
+        
+        for index, row in data.iterrows():
+            self.visualizer.colorfu_text(row["tokens"], row["NER_labels"])
 
 
 if __name__ == "__main__":

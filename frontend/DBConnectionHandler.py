@@ -9,6 +9,10 @@ class DBConnectionHandler:
         self.NER_tags_list = ['corporation', 'creative_work',
                               'event', 'group', 'location', 'person', 'product']
         self.sentiment_tags_list = self.df["sentiment_labels"].unique()
+        self.categories_list = {"world": "LABEL_0",
+                                "sport": "LABEL_1",
+                                "business": "LABEL_2",
+                                "sci-tech": "LABEL_3"}
 
     def get_NER_distrubution(self, number_of_days_in_period: int) -> dict:
         # Use date form the past for debbuging
@@ -43,6 +47,15 @@ class DBConnectionHandler:
         labels_dict = dict(zip(self.sentiment_tags_list, [
                            0] * len(self.sentiment_tags_list)))
         return filtered_data["sentiment_labels"].value_counts().to_dict()
+    
+    def get_n_twits_for_categoty(self, category: str, N = 10) -> pd.DataFrame():
+        
+        filtered_data = self.df[self.df['categ_labels'] == self.categories_list[category]]
+
+        return filtered_data.sample(N)         
 
     def get_NER_tags(self) -> list:
         return self.NER_tags_list
+    
+    def get_categories(self) -> list:
+        return self.categories_list.keys()
