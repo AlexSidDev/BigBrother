@@ -2,10 +2,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import os
-
-
-def to_device(batch: dict, device: str):
-    return {k: v.to(device) for k, v in batch.items()}
+from backend.model_utils import to_device
 
 
 class Trainer:
