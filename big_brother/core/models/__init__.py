@@ -1,1 +1,1 @@
-from .models import NerModel, ClassificationModel
+from .models import NerModel, ClassificationModel, BaseModel

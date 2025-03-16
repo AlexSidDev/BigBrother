@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from transformers import PreTrainedTokenizer
 from ast import literal_eval
-from dataset import Dataset
+from datasets import Dataset
 
 
 class DatasetTokenizer:

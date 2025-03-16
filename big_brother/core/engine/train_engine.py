@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import os
-from big_brother.core import to_device
 
+import big_brother.core
 
 class Trainer:
     def __init__(self, model,
@@ -38,7 +38,7 @@ class Trainer:
             mean_loss_val = 0
             self.model.train()
             for it, inputs in tqdm(enumerate(self.train_dataloader), total=len(self.train_dataloader), desc='Training'):
-                inputs = to_device(inputs, self.device)
+                inputs = big_brother.core.to_device(inputs, self.device)
                 labels = inputs.pop('labels')
 
                 logits = self.model(**inputs).logits

@@ -5,7 +5,7 @@ from typing import TypedDict
 import pandas as pd
 import numpy as np
 
-from big_brother.core import aggregate_entities, calculate_chi_squared, calculate_expected_freq
+import big_brother.core
 
 
 class Category(Enum):
@@ -37,7 +37,7 @@ class KeywordExtractor:
 
         """
 
-        self.entities = aggregate_entities(data)
+        self.entities = big_brother.core.aggregate_entities(data)
         self.criterion = {0.05: 3.842, 
                           0.01: 6.635, 
                           0.001: 10.828}
@@ -112,13 +112,13 @@ class KeywordExtractor:
             freq_outside, inverse_freq_within, \
                 inverse_freq_outside = self.get_frequencies(start=start, end=end)
 
-        expected_freq = calculate_expected_freq(freq_within=observed_freq_within,
-                                                freq_outside=freq_outside,
-                                                inverse_freq_within=inverse_freq_within,
-                                                inverse_freq_outside=inverse_freq_outside)
+        expected_freq = big_brother.core.calculate_expected_freq(freq_within=observed_freq_within,
+                                                                 freq_outside=freq_outside,
+                                                                 inverse_freq_within=inverse_freq_within,
+                                                                 inverse_freq_outside=inverse_freq_outside)
         
-        chi_squared_values = calculate_chi_squared(observed_freq=observed_freq_within,
-                                                   expected_freq=expected_freq)
+        chi_squared_values = big_brother.core.calculate_chi_squared(observed_freq=observed_freq_within,
+                                                                    expected_freq=expected_freq)
         
         top_entities_positions = np.argsort(chi_squared_values)[::-1][:top]
         top_entities = entities[top_entities_positions]

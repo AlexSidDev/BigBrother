@@ -20,7 +20,9 @@ class TweetProducer:
         sleep: bool = False,
     ) -> None:
         self._conf = {
-            'bootstrap.servers': f"{tweet_processor_host}:{tweet_processor_port}"
+            'bootstrap.servers': f"{tweet_processor_host}:{tweet_processor_port}",
+            'default.topic.config': {'api.version.request': True},
+            'security.protocol': 'SSL'
         }
         self._tweet_processor_host = tweet_processor_host
         self._tweet_processor_port = tweet_processor_port

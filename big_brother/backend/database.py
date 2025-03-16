@@ -1,2 +1,2 @@
-class ConnectionHandler:
+class DBConnectionHandler:
     pass
