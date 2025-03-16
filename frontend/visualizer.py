@@ -2,6 +2,7 @@ import streamlit as st
 import re
 import ast
 
+
 class Visualizer:
     def __init__(self):
         self.colors = {

@@ -2,8 +2,8 @@ import streamlit as st
 import datetime
 import pandas as pd
 
-from .DBConnectionHandler import DBConnectionHandler
-from .Visualizer import Visualizer
+from .db_connector import DBConnectionHandler
+from .visualizer import Visualizer
 
 
 class StreamlitUI:
@@ -71,23 +71,31 @@ class StreamlitUI:
         relevant_ner_df = pd.DataFrame()
         if len(dates) == 2:
             start_period, end_period = dates
-            relevant_ner_df = self.db_handler.get_relevant_NER(start_period, end_period)
+            relevant_ner_df = self.db_handler.get_relevant_NER(
+                start_period, end_period)
 
         if len(relevant_ner_df):
             selected_entity = None
-            cols = st.columns(len(relevant_ner_df))              
-
-            for index, row in relevant_ner_df.iterrows():
+            n_rows = len(relevant_ner_df)
+            cols1 = st.columns(n_rows//2)
+            cols2 = st.columns(n_rows - n_rows//2)
+            for index, row in relevant_ner_df[:n_rows//2].iterrows():
                 button_key = "button_" + str(index)
-                with cols[index]:
+                with cols1[index]:
                     if st.button(row.entity):
                         selected_entity = row.entity
-            
+
+            for index, row in relevant_ner_df[n_rows//2:n_rows].iterrows():
+                button_key = "button_" + str(index)
+                with cols2[index - n_rows//2]:
+                    if st.button(row.entity):
+                        selected_entity = row.entity
+
             if (selected_entity):
-                data = self.db_handler.get_rows_with_certain_token(selected_entity, start_period, end_period)
+                data = self.db_handler.get_rows_with_certain_token(
+                    selected_entity, start_period, end_period)
                 NER_stat = self.db_handler.count_NER_distribution(data)
                 self.visualizer.barplot(NER_stat, "NER tags")
-            
 
 
 if __name__ == "__main__":
