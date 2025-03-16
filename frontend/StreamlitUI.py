@@ -1,7 +1,9 @@
 import streamlit as st
+import datetime
+import pandas as pd
 
-from DBConnectionHandler import DBConnectionHandler
-from Visualizer import Visualizer
+from .DBConnectionHandler import DBConnectionHandler
+from .Visualizer import Visualizer
 
 
 class StreamlitUI:
@@ -11,7 +13,8 @@ class StreamlitUI:
         self.pages = {"Home": self.home_page,
                       "NER statistic": self.NER_statistic_page,
                       "NER Sentiment": self.NER_sentiment_page,
-                      "N twits": self.colorful_twits_for_category_page}
+                      "N twits": self.colorful_twits_for_category_page,
+                      "Relevant NERs": self.relevant_NERs}
 
         self.days = {"All the time": 0, "Last day": 1,
                      "Last week": 7, "Last month": 30, "Last year": 365}
@@ -48,11 +51,43 @@ class StreamlitUI:
         selected_category = st.selectbox("Select category", catogories)
         data = self.db_handler.get_n_twits_for_categoty(
             selected_category)
-        
+
         self.visualizer.visualize_categories()
-        
+
         for index, row in data.iterrows():
             self.visualizer.colorfu_text(row["tokens"], row["NER_labels"])
+
+    def relevant_NERs(self):
+        min_date = self.db_handler.get_min_date()
+        today = datetime.datetime.now()
+        start = today - datetime.timedelta(days=7)
+        dates = st.date_input(
+            "Select period",
+            (start, today),
+            min_date,
+            today,
+            format="YYYY/MM/DD",
+        )
+        relevant_ner_df = pd.DataFrame()
+        if len(dates) == 2:
+            start_period, end_period = dates
+            relevant_ner_df = self.db_handler.get_relevant_NER(start_period, end_period)
+
+        if len(relevant_ner_df):
+            selected_entity = None
+            cols = st.columns(len(relevant_ner_df))              
+
+            for index, row in relevant_ner_df.iterrows():
+                button_key = "button_" + str(index)
+                with cols[index]:
+                    if st.button(row.entity):
+                        selected_entity = row.entity
+            
+            if (selected_entity):
+                data = self.db_handler.get_rows_with_certain_token(selected_entity, start_period, end_period)
+                NER_stat = self.db_handler.count_NER_distribution(data)
+                self.visualizer.barplot(NER_stat, "NER tags")
+            
 
 
 if __name__ == "__main__":

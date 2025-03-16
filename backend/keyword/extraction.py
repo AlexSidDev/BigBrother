@@ -72,7 +72,7 @@ class KeywordExtractor:
             inverse_freq_within (np.ndarray): Inverse observed frequency.
             inverse_freq_outside (np.ndarray): Inverse frequency in the rest of the texts.
         """
-        
+        print("start", self.entities.date.iloc[0])
         within = (self.entities.date > start) & (self.entities.date < end)
         frequencies_withith = self.entities[within].entity.value_counts()
         entities = frequencies_withith.index.values

@@ -2,7 +2,6 @@ import streamlit as st
 import re
 import ast
 
-
 class Visualizer:
     def __init__(self):
         self.colors = {
@@ -19,12 +18,6 @@ class Visualizer:
         st.bar_chart(statistic, x_label=descripltion)
 
     def colorfu_text(self, words: list[str], ner_tags: list[str]):
-        if (type(words) == str):
-            text = words.strip("[]")
-            words = [word.strip()
-                     for word in re.split(r"'(.*?)'", text) if word.strip()]
-        if (type(ner_tags) == str):
-            ner_tags = ast.literal_eval(ner_tags)
         styled_text = ""
         for word, tag in zip(words, ner_tags):
             tag = tag.split('-')[-1]
