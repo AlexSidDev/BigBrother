@@ -1,6 +1,6 @@
 import torch
 from tqdm import tqdm
-from backend.model_utils import to_device, preds_to_bio
+from big_brother.core import to_device, preds_to_bio
 
 
 def inference(model, val_dataloader, word_inds, labels_mapping, device='cuda'):

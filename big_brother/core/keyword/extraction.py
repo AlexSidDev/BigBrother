@@ -5,7 +5,7 @@ from typing import TypedDict
 import pandas as pd
 import numpy as np
 
-from backend.keyword.utils import aggregate_entities, calculate_chi_squared, calculate_expected_freq
+from big_brother.core import aggregate_entities, calculate_chi_squared, calculate_expected_freq
 
 
 class Category(Enum):

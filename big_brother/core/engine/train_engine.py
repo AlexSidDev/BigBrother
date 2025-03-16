@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import os
-from backend.model_utils import to_device
+from big_brother.core import to_device
 
 
 class Trainer:

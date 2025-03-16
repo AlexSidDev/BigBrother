@@ -3,7 +3,7 @@ import re
 import torch
 from transformers import PreTrainedTokenizer
 from urlextract import URLExtract
-from backend.model_utils import preds_to_bio, to_device
+from big_brother.core import preds_to_bio, to_device
 
 
 class BaseModel(ABC):
