@@ -8,6 +8,11 @@ from confluent_kafka import Producer
 from utils import delivery_report
 
 logger = logging.getLogger("tweet_producing")
+logger.setLevel(logging.DEBUG)
+console = logging.StreamHandler()
+console_formater = logging.Formatter("[ %(levelname)s ] %(message)s")
+console.setFormatter(console_formater)
+logger.addHandler(console)
 
 
 class TweetProducer:
@@ -43,6 +48,7 @@ class TweetProducer:
         while True:
             df_entry = self._data.iloc[np.random.randint(low=low, high=high), :]
             data = df_entry.to_json()
+            #logger.debug(f"data to send: {data}")
             self._producer.produce(self._send_topic, value=data, callback=delivery_report)
             self._producer.flush()
 
@@ -52,8 +58,8 @@ class TweetProducer:
 if __name__ == "__main__":
     producer = TweetProducer(
         tweet_processor_host="localhost",
-        tweet_processor_port="9095",
-        sleep=True
+        tweet_processor_port="9092",
+        sleep=False
     )
     
     producer.connect()

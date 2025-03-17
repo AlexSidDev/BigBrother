@@ -14,7 +14,11 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from backend.inference.models import ClassificationModel
 
 logger = logging.getLogger("tweet_processing")
-
+logger.setLevel(logging.DEBUG)
+console = logging.StreamHandler()
+console_formater = logging.Formatter("[ %(levelname)s ] %(message)s")
+console.setFormatter(console_formater)
+logger.addHandler(console)
 
 class TweetProcessorProducer:
     def __init__(
@@ -64,9 +68,9 @@ class TweetProcessorConsumer:
     def producer(self) -> Any:
         _producer = TweetProcessorProducer(
             db_connection_handler_host="localhost",
-            db_connection_handler_port="9096",
+            db_connection_handler_port="9093",
             send_topic="db_connection_handler_topic",
-            sleep=True
+            sleep=False
         )
         _producer.connect()
 
@@ -145,7 +149,7 @@ class TweetProcessorConsumer:
             df = pd.read_json(msg.value().decode('utf-8'), orient="index")
             df = df.transpose()
             logger.debug(f"Recived dataframe: {df}")
-            
+            # TODO (@a.klykov) Нужно достать из датафрейма твит и отдать моделям или можно просто msg.values() отдать?
             data_to_send = {}
             for name, model in models:
                 data_to_send[name] = model(df)
@@ -162,7 +166,7 @@ class TweetProcessorConsumer:
 if __name__ == "__main__":
     consumer = TweetProcessorConsumer(
         tweet_processor_host="localhost",
-        tweet_processor_port="9095",
+        tweet_processor_port="9092",
     )
 
     consumer.connect()
