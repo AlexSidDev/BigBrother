@@ -8,16 +8,21 @@ import yaml
 import logging
 
 
-def setup_logging(config_file: str="configs/logging.yaml"):
-    with open(config_file, "r") as f_in:
-        config = yaml.safe_load(f_in)
-    logging.config.dictConfig(config)
+# def setup_logging(config_file: str="configs/logging.yaml"):
+#     with open(config_file, "r") as f_in:
+#         config = yaml.safe_load(f_in)
+#     logging.config.dictConfig(config)
 
-setup_logging()
+#setup_logging()
 
 logger = logging.getLogger("big_brother")
+logger.setLevel(logging.DEBUG)
+console = logging.StreamHandler()
+console_formater = logging.Formatter("[ %(levelname)s ] %(message)s")
+console.setFormatter(console_formater)
+logger.addHandler(console)
 
-sys.path.append(str(Path(__file__).parent))
+#sys.path.append(str(Path(__file__).parent))
 
 
 class Application():

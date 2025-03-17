@@ -3,7 +3,11 @@ import logging
 from confluent_kafka import Consumer
 
 logger = logging.getLogger("db_connection_backend")
-
+logger.setLevel(logging.DEBUG)
+console = logging.StreamHandler()
+console_formater = logging.Formatter("[ %(levelname)s ] %(message)s")
+console.setFormatter(console_formater)
+logger.addHandler(console)
 
 class DBConnectionHandler:
     def __init__(
@@ -46,7 +50,7 @@ class DBConnectionHandler:
 if __name__ == "__main__":
     consumer = DBConnectionHandler(
         db_connection_handler_host="localhost",
-        db_connection_handler_port="9096",
+        db_connection_handler_port="9093",
     )
 
     consumer.connect()
