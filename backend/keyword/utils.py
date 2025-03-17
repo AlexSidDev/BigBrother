@@ -43,7 +43,7 @@ def aggregate_entities(data: pd.DataFrame) -> pd.DataFrame:
                 2	Central Park , Desa Parkcity	location	2019-10-13
     """
     entities = data.apply(lambda entry: extract_entities(tokens=entry.tokens, 
-                                                         labels=entry.bio_labels, 
+                                                         labels=entry.NER_labels, 
                                                          date=entry.date),
                           axis=1)
     return pd.DataFrame([x for xs in entities for x in xs])
