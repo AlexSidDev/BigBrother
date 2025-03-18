@@ -1,6 +1,7 @@
 import streamlit as st
 import re
 import ast
+import pandas as pd
 
 
 class Visualizer:
@@ -15,10 +16,27 @@ class Visualizer:
             "product": "#4682B4",     # Стальной синий
         }
 
+        self.colors_light = {
+            # Бледно-голубой (полупрозрачный)
+            "person": "rgba(176, 224, 230, 0.3)",
+            # Бледно-зеленый (полупрозрачный)
+            "corporation": "rgba(152, 251, 152, 0.3)",
+            # Бледно-розовый (полупрозрачный)
+            "creative_work": "rgba(255, 182, 193, 0.3)",
+            # Бледно-золотой (полупрозрачный)
+            "event": "rgba(255, 215, 0, 0.3)",
+            # Бледно-фиолетовый (полупрозрачный)
+            "group": "rgba(155, 48, 255, 0.3)",
+            # Бледно-малиновый (полупрозрачный)
+            "location": "rgba(255, 99, 71, 0.3)",
+            # Бледно-стальной синий (полупрозрачный)
+            "product": "rgba(135, 206, 250, 0.3)",
+        }
+
     def barplot(self, statistic: dict, descripltion: str):
         st.bar_chart(statistic, x_label=descripltion)
 
-    def colorfu_text(self, words: list[str], ner_tags: list[str]):
+    def colorful_text(self, words: list[str], ner_tags: list[str]):
         styled_text = ""
         for word, tag in zip(words, ner_tags):
             tag = tag.split('-')[-1]
@@ -37,18 +55,46 @@ class Visualizer:
         st.markdown("\n")
 
     def visualize_categories(self):
+        st.markdown("#### Colors of named entity labels in twits:")
         keys = list(self.colors.keys())
-        half = len(keys) // 2
-        col1, col2 = st.columns(2)
-        legend_html = "<h4>Legend:</h4><ul style='list-style-type: none; padding: 0;'>"
-        with col1:
-            for tag in keys[:half + 1]:
-                legend_html += f"<li style='margin-bottom: 5px;'><span style='background-color: {self.colors[tag]}; padding: 3px 8px; border-radius: 3px;'>&nbsp;&nbsp;</span> {tag}</li>"
-            legend_html += "</ul>"
-            st.markdown(legend_html, unsafe_allow_html=True)
-        legend_html = "<h4>Legend:</h4><ul style='list-style-type: none; padding: 0;'>"
-        with col2:
-            for tag in keys[half + 1:]:
-                legend_html += f"<li style='margin-bottom: 5px;'><span style='background-color: {self.colors[tag]}; padding: 3px 8px; border-radius: 3px;'>&nbsp;&nbsp;</span> {tag}</li>"
-            legend_html += "</ul>"
-            st.markdown(legend_html, unsafe_allow_html=True)
+
+        cols = st.columns(len(keys))
+
+        for index, key in enumerate(keys):
+            with cols[index]:
+                st.markdown(f"""
+                                <div style="
+                                    background-color: {self.colors_light[key]};
+                                    color: gray;
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                    text-align: center;
+                                    font-size: 14px;
+                                    width: 220px;
+                                    margin: auto;">
+                                    {key}
+                                </div>
+                            """, unsafe_allow_html=True)
+
+    def dates_selection(self, min_date, start, max_date):
+
+        dates = st.date_input(
+            "Select period",
+            (start, max_date),
+            min_date,
+            max_date,
+            format="YYYY/MM/DD",
+        )
+        return dates
+
+    def visualize_selected_twits(self, data: pd.DataFrame, min_cols_num=1, max_cols_num=5):
+        st.markdown(
+            "\n\n")
+
+        n_cols = min(max(len(data), min_cols_num), max_cols_num)
+        cols = st.columns(n_cols)
+        for index, row in data.reset_index().iterrows():
+            with cols[index % n_cols]:
+                st.write(f"##### {row["date"]}")
+                self.colorful_text(row["tokens"], row["NER_labels"])
+                st.write(f"")
