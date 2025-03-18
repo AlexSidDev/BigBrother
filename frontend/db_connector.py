@@ -20,20 +20,26 @@ class DBConnectionHandler:
                                 "sci-tech": "LABEL_3"}
         self.extractor = KeywordExtractor(self.df)
 
+        self.min_date = self.get_min_date()
+        self.today = datetime.datetime.now()
+        self.start = self.today - datetime.timedelta(days=7)
+
     def _preprocess(self, csv_path: str) -> pd.DataFrame:
         data = pd.read_csv(csv_path)
 
         def preprocess_twits(twit):
             if (type(twit) == str):
                 text = twit.strip("[]")
-                twit = [word.strip()
-                        for word in re.split(r"'(.*?)'", text) if word.strip()]
+                text = re.findall(r'".+?"|\'.+?\'|\S+', text)
+                # Убираем лишние кавычки
+                twit = [w.strip("'\"") for w in text]
             return twit
 
         data["tokens"] = data["tokens"].apply(preprocess_twits)
         data["NER_labels"] = data["NER_labels"].apply(
             lambda tag: ast.literal_eval(tag) if type(tag) == str else tag)
         data["date"] = pd.to_datetime(data["date"]).dt.date
+
         return data
 
     def count_NER_distribution(self, df):
@@ -67,15 +73,15 @@ class DBConnectionHandler:
     def get_sentiment_statistic_for_NER(self, NER_tag) -> dict:
         filtered_data = self.df[self.df['NER_labels'].apply(
             lambda x: NER_tag in ' '.join(x))]
-        labels_dict = dict(zip(self.sentiment_tags_list, [
-                           0] * len(self.sentiment_tags_list)))
         return filtered_data["sentiment_labels"].value_counts().to_dict()
 
-    def get_n_twits_for_categoty(self, category: str, N=10) -> pd.DataFrame():
-
-        filtered_data = self.df[self.df['categ_labels']
-                                == self.categories_list[category]]
-
+    def get_n_twits_for_categoty(self, category: str, start_period: datetime.datetime, end_period: datetime.datetime, N=10) -> pd.DataFrame():
+        filtered_data = self.df[(self.df['date'] >= start_period)]
+        filtered_data = filtered_data[(filtered_data['date'] <= end_period)]
+        filtered_data = filtered_data[self.df['categ_labels']
+                                      == self.categories_list[category]]
+        if len(filtered_data) < N:
+            return filtered_data
         return filtered_data.sample(N)
 
     def get_NER_tags(self) -> list:
