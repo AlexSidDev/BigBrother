@@ -6,13 +6,15 @@ import pandas as pd
 import ast
 import json
 from utils import delivery_report
+
+import sys
+sys.path.append('C:\\Studying\\BigBrother')
 from backend.inference.models import NerModel, ClassificationModel, BaseModel
 
 from backend.model_utils import create_model
 from transformers import AutoTokenizer
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from backend.inference.models import ClassificationModel
 
 logger = logging.getLogger("tweet_processing")
 logger.setLevel(logging.DEBUG)
@@ -45,7 +47,6 @@ class TweetProcessorProducer:
     def send(self, data: Any) -> None:
         self._producer.produce(self._send_topic, key='1', value=data, callback=delivery_report)
         self._producer.flush()
-        logger.debug(f"Produced: {data}")
         if self._sleep:
             time.sleep(10)
 
@@ -149,13 +150,10 @@ class TweetProcessorConsumer:
             
             df = pd.read_json(msg.value().decode('utf-8'), orient="index")
             df = df.transpose()
-            logger.debug(f"{type(df["tokens"])}")
-            logger.debug(f"{type(df["tokens"][0][0])}")
-            raw_tweet = ast.literal_eval(df["tokens"][0])
+            raw_tweet = df["tokens"][0]
 
             logger.debug(f"Raw tweet: {raw_tweet}")
-            #logger.debug(f"Raw tokens: {df["tokens"][0]}")
-
+            #logger.debug(f"Raw data: {df}")
 
             data_to_send = {}
             for name, model in models.items():
@@ -164,10 +162,10 @@ class TweetProcessorConsumer:
             data_to_send["tweet"] = raw_tweet
             data_to_send["time"] = time.time()
             data_to_send["tweet_id"] = tweet_id
-
-            data_to_send = pd.DataFrame(data_to_send)
-            data_to_send = data_to_send.to_json()
             logger.debug(f"Data to send to database: {data_to_send}")
+
+            data_to_send = json.dumps(data_to_send)
+
             producer.send(data_to_send)
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from backend.model_utils import preds_to_bio, to_device
 
 class BaseModel(ABC):
     def __init__(self, model, tokenizer: PreTrainedTokenizer, id_2_label: dict, device: str):
-        self.model = model
+        self.model = model.to(device)
         self.tokenizer = tokenizer
         self.max_len = model.config.max_position_embeddings
         self.id_2_label = id_2_label
