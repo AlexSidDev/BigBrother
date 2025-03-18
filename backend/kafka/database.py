@@ -50,7 +50,7 @@ class DBConnectionHandler:
 if __name__ == "__main__":
     consumer = DBConnectionHandler(
         db_connection_handler_host="localhost",
-        db_connection_handler_port="9093",
+        db_connection_handler_port="9096",
     )
 
     consumer.connect()
