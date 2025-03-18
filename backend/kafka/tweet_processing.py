@@ -3,7 +3,8 @@ import time
 from typing import Any, Dict
 from confluent_kafka import Producer, Consumer
 import pandas as pd
-
+import ast
+import json
 from utils import delivery_report
 from backend.inference.models import NerModel, ClassificationModel, BaseModel
 
@@ -68,7 +69,7 @@ class TweetProcessorConsumer:
     def producer(self) -> Any:
         _producer = TweetProcessorProducer(
             db_connection_handler_host="localhost",
-            db_connection_handler_port="9093",
+            db_connection_handler_port="9096",
             send_topic="db_connection_handler_topic",
             sleep=False
         )
@@ -148,25 +149,31 @@ class TweetProcessorConsumer:
             
             df = pd.read_json(msg.value().decode('utf-8'), orient="index")
             df = df.transpose()
-            logger.debug(f"Recived dataframe: {df}")
-            # TODO (@a.klykov) Нужно достать из датафрейма твит и отдать моделям или можно просто msg.values() отдать?
-            data_to_send = {}
-            for name, model in models:
-                data_to_send[name] = model(df)
+            logger.debug(f"{type(df["tokens"])}")
+            logger.debug(f"{type(df["tokens"][0][0])}")
+            raw_tweet = ast.literal_eval(df["tokens"][0])
 
-            data_to_send["tweet"] = df
+            logger.debug(f"Raw tweet: {raw_tweet}")
+            #logger.debug(f"Raw tokens: {df["tokens"][0]}")
+
+
+            data_to_send = {}
+            for name, model in models.items():
+                data_to_send[name] = model(raw_tweet)
+
+            data_to_send["tweet"] = raw_tweet
             data_to_send["time"] = time.time()
             data_to_send["tweet_id"] = tweet_id
 
             data_to_send = pd.DataFrame(data_to_send)
             data_to_send = data_to_send.to_json()
-            logger.debug(f"Preprocessed data: {data_to_send}")
+            logger.debug(f"Data to send to database: {data_to_send}")
             producer.send(data_to_send)
 
 if __name__ == "__main__":
     consumer = TweetProcessorConsumer(
         tweet_processor_host="localhost",
-        tweet_processor_port="9092",
+        tweet_processor_port="9095",
     )
 
     consumer.connect()

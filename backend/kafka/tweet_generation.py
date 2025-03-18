@@ -49,7 +49,8 @@ class TweetProducer:
             df_entry = self._data.iloc[np.random.randint(low=low, high=high), :]
             data = df_entry.to_json()
             #logger.debug(f"data to send: {data}")
-            self._producer.produce(self._send_topic, value=data, callback=delivery_report)
+            #self._producer.produce(self._send_topic, value=data, callback=delivery_report)
+            self._producer.produce(self._send_topic, value=data)
             self._producer.flush()
 
             if self._sleep:
@@ -58,7 +59,7 @@ class TweetProducer:
 if __name__ == "__main__":
     producer = TweetProducer(
         tweet_processor_host="localhost",
-        tweet_processor_port="9092",
+        tweet_processor_port="9095",
         sleep=False
     )
     
