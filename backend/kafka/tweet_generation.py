@@ -1,3 +1,4 @@
+import ast
 import logging
 import pandas as pd
 import numpy as np
@@ -21,7 +22,7 @@ class TweetProducer:
         tweet_processor_host: str,
         tweet_processor_port: str, 
         send_topic: str = "raw_data_topic",
-        data_path: str = "data/labeled_dataset.csv",
+        data_path: str = "data/test_data_pure.csv",
         sleep: bool = False,
     ) -> None:
         self._conf = {
@@ -29,7 +30,7 @@ class TweetProducer:
         }
         self._tweet_processor_host = tweet_processor_host
         self._tweet_processor_port = tweet_processor_port
-        self._data = pd.read_csv(data_path, index_col=0)
+        self._data = pd.read_csv(data_path, converters={'tokens': ast.literal_eval})
         self._send_topic = send_topic
         self._sleep = sleep
 
@@ -47,6 +48,7 @@ class TweetProducer:
         logger.info(f"Start sending data from TweetProducer to TweetProcessor with following ip {self._tweet_processor_host}:{self._tweet_processor_port}")
         while True:
             df_entry = self._data.iloc[np.random.randint(low=low, high=high), :]
+            df_entry['tokens'] = ' '.join(df_entry['tokens'])
             data = df_entry.to_json()
             #logger.debug(f"data to send: {data}")
             #self._producer.produce(self._send_topic, value=data, callback=delivery_report)
@@ -54,13 +56,13 @@ class TweetProducer:
             self._producer.flush()
 
             if self._sleep:
-                time.sleep(100)
+                time.sleep(10)
     
 if __name__ == "__main__":
     producer = TweetProducer(
         tweet_processor_host="localhost",
         tweet_processor_port="9095",
-        sleep=False
+        sleep=True
     )
     
     producer.connect()
