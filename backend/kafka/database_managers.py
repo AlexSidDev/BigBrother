@@ -54,7 +54,12 @@ class DatabaseReader:
         return self.session.query(Tweet.time, func.min(Tweet.time))
 
     def get_all(self):
-        return self.session.execute(select(Tweet)).all()
+        return self.session.execute(select(Tweet.id,
+                                           Tweet.time,
+                                           Tweet.tweet,
+                                           Tweet.ner,
+                                           Tweet.category,
+                                           Tweet.sentiment)).all()
 
     def close(self):
         self.session.close()
