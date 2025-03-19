@@ -3,16 +3,17 @@ import re
 import torch
 from transformers import PreTrainedTokenizer
 from urlextract import URLExtract
+import nltk
 from backend.model_utils import preds_to_bio, to_device
+from functools import partial
 
 
 class BaseModel(ABC):
-    def __init__(self, model, tokenizer: PreTrainedTokenizer, id_2_label: dict, device: str):
+    def __init__(self, model, tokenizer: PreTrainedTokenizer, id_2_label: dict):
         self.model = model
         self.tokenizer = tokenizer
-        self.max_len = model.config.max_position_embeddings
-        self.id_2_label = id_2_label
-        self.device = device
+        self.max_len = 512
+        self.id_2_label = {int(k): v for k, v in id_2_label.items()}
         self.extractor = URLExtract()
 
     def replace_url_username(self, raw_tweet: str, url_token, username_token):
@@ -23,59 +24,67 @@ class BaseModel(ABC):
         return formatted_tweet
 
     @abstractmethod
-    def preprocess(self, raw_tweet: str):
+    def preprocess(self, raw_tweets: list):
         pass
 
     def inference(self, input_dict: dict):
-        input_dict = to_device(input_dict, self.device)
-        with torch.no_grad():
-            model_output = self.model(**input_dict).logits.argmax(-1).squeeze().tolist()
+        model_output = self.model.run(None, input_dict)[0].argmax(-1).tolist()
         return {'labels': model_output}
 
     @abstractmethod
     def postprocess(self, model_output: dict):
         pass
 
-    def __call__(self, raw_tweet: str):
-        preprocessed_tweet = self.preprocess(raw_tweet)
+    def __call__(self, raw_tweets: list):
+        preprocessed_tweet = self.preprocess(raw_tweets)
         model_output = self.inference(preprocessed_tweet)
         processed_output = self.postprocess(model_output)
         return processed_output
 
 
 class ClassificationModel(BaseModel):
-    def __init__(self, model, tokenizer: PreTrainedTokenizer, id_2_label: dict, device: str):
-        super().__init__(model, tokenizer, id_2_label, device)
+    def __init__(self, model, tokenizer: PreTrainedTokenizer, id_2_label: dict):
+        super().__init__(model, tokenizer, id_2_label)
+        self.replace_fn = partial(self.replace_url_username, url_token='http', username_token='@user')
 
-    def preprocess(self, raw_tweet: str):
-        formatted_tweet = self.replace_url_username(raw_tweet, 'http', '@user')
+    def preprocess(self, raw_tweets: list):
+        formatted_tweet = list(map(self.replace_fn, raw_tweets))
         tokenized_inputs = self.tokenizer(formatted_tweet,
-                                          return_tensors='pt',
                                           max_length=self.max_len,
                                           truncation=True,
+                                          padding=True,
                                           add_special_tokens=True)
-        input_dict = {'input_ids': tokenized_inputs['input_ids']}
+        input_dict = dict(tokenized_inputs)
         return input_dict
 
     def postprocess(self, model_output: dict):
-        return self.id_2_label[model_output['labels']]
+        return [self.id_2_label[output] for output in model_output['labels']]
 
 
 class NerModel(BaseModel):
-    def __init__(self, model, tokenizer: PreTrainedTokenizer, id_2_label: dict, device: str):
-        super().__init__(model, tokenizer, id_2_label, device)
+    def __init__(self, model, tokenizer: PreTrainedTokenizer, id_2_label: dict):
+        super().__init__(model, tokenizer, id_2_label)
+        self.convert_to_bio = lambda args: preds_to_bio(*args, self.id_2_label)
+        self.replace_fn = partial(self.replace_url_username, url_token='{{URL}}', username_token=r'\1{\2@}')
 
-    def preprocess(self, raw_tweet: str):
-        formatted_tweet = self.replace_url_username(raw_tweet, '{{URL}}', r'\1{\2@}')
-        tokens = formatted_tweet.split(' ')
+        self.mwtokenizer = nltk.MWETokenizer([tuple('{{') + ('URL',) + tuple('}}'),
+                                              tuple('{{') + ('USERNAME',) + tuple('}}'),
+                                              tuple("{@"), tuple("@}")],
+                                             separator='')
+
+    def preprocess(self, raw_tweets: list):
+        formatted_tweet = list(map(self.replace_fn, raw_tweets))
+        splitted_tweet = list(map(nltk.word_tokenize, formatted_tweet))
+        tokens = list(map(self.mwtokenizer.tokenize, splitted_tweet))
         tokenized_inputs = self.tokenizer(tokens,
-                                          return_tensors='pt',
                                           max_length=self.max_len,
                                           truncation=True,
+                                          padding=True,
                                           add_special_tokens=True,
                                           is_split_into_words=True)
-        row_tokens, word_ids = tokenized_inputs['input_ids'], tokenized_inputs.word_ids()
-        input_dict = {'input_ids': row_tokens, 'word_ids': word_ids}
+        word_ids = [tokenized_inputs.word_ids(ind) for ind in range(len(tokenized_inputs.input_ids))]
+        input_dict = dict(tokenized_inputs)
+        input_dict['word_ids'] = word_ids
         return input_dict
 
     def inference(self, input_dict: dict):
@@ -85,6 +94,5 @@ class NerModel(BaseModel):
         return output
 
     def postprocess(self, model_output: dict):
-        label_ids = model_output['labels']
-        bio_labels = preds_to_bio(label_ids, model_output['word_ids'], self.id_2_label)
+        bio_labels = list(map(self.convert_to_bio, zip(model_output['labels'], model_output['word_ids'])))
         return bio_labels
