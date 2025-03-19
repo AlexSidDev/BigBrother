@@ -2,18 +2,27 @@ import datetime
 import pandas as pd
 import re
 import ast
+import nltk
 
 from backend.keyword.extraction import KeywordExtractor
+from backend.kafka.database_managers import DatabaseReader
 
 
 class DBConnectionHandler:
     # Currently we use .csv as DB
     def __init__(self, csv_path) -> None:
-        self.df = self._preprocess(csv_path)  # pd.read_csv(csv_path)
+        self.db_connector = DatabaseReader()
+
+        self.mwtokenizer = nltk.MWETokenizer([tuple('{{') + ('URL',) + tuple('}}'),
+                                              tuple('{{') + ('USERNAME',) + tuple('}}'),
+                                              tuple("{@"), tuple("@}")],
+                                             separator='')
+
+        self.df = self._preprocess(self.db_connector.get_all())
 
         self.NER_tags_list = ['corporation', 'creative_work',
                               'event', 'group', 'location', 'person', 'product']
-        self.sentiment_tags_list = self.df["sentiment_labels"].unique()
+        self.sentiment_tags_list = ['negative', 'positive', 'neutral']
         self.categories_list = {"world": "LABEL_0",
                                 "sport": "LABEL_1",
                                 "business": "LABEL_2",
@@ -24,18 +33,16 @@ class DBConnectionHandler:
         self.today = datetime.datetime.now()
         self.start = self.today - datetime.timedelta(days=7)
 
-    def _preprocess(self, csv_path: str) -> pd.DataFrame:
-        data = pd.read_csv(csv_path)
+    def _preprocess(self, data_rows) -> pd.DataFrame:
+        data_rows = list(map(lambda entity: entity._mapping, data_rows))
+        data = pd.DataFrame(data_rows)
 
         def preprocess_twits(twit):
-            if (type(twit) == str):
-                text = twit.strip("[]")
-                text = re.findall(r'".+?"|\'.+?\'|\S+', text)
-                # Убираем лишние кавычки
-                twit = [w.strip("'\"") for w in text]
+            splitted_tweet = nltk.word_tokenize(twit)
+            twit = self.mwtokenizer.tokenize(splitted_tweet)
             return twit
 
-        data["tokens"] = data["tokens"].apply(preprocess_twits)
+        data["tokens"] = data["tweet"].apply(preprocess_twits)
         data["NER_labels"] = data["NER_labels"].apply(
             lambda tag: ast.literal_eval(tag) if type(tag) == str else tag)
         data["date"] = pd.to_datetime(data["date"]).dt.date

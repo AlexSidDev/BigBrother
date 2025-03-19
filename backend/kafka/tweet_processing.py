@@ -113,7 +113,7 @@ class TweetProcessorConsumer:
 
         return {
             "ner": ner_model,
-            "classification": class_model,
+            "category": class_model,
             "sentiment": sent_model
         }
 

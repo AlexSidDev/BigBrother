@@ -1,6 +1,9 @@
 import logging
-
 from confluent_kafka import Consumer
+from database_managers import DatabaseWriter
+import pandas as pd
+import json
+
 
 logger = logging.getLogger("db_connection_backend")
 logger.setLevel(logging.DEBUG)
@@ -8,6 +11,7 @@ console = logging.StreamHandler()
 console_formater = logging.Formatter("[ %(levelname)s ] %(message)s")
 console.setFormatter(console_formater)
 logger.addHandler(console)
+
 
 class DBConnectionHandler:
     def __init__(
@@ -23,6 +27,8 @@ class DBConnectionHandler:
         self._db_connection_handler_host = db_connection_handler_host
         self._db_connection_handler_port = db_connection_handler_port
         self._read_topic = read_topic
+
+        self.writer = DatabaseWriter()
 
     def connect(self) -> None:
         try:
@@ -46,6 +52,9 @@ class DBConnectionHandler:
                 continue
 
             logger.debug(f"Recieved message: {msg.value()}")
+            fetched_data = pd.DataFrame.from_dict(json.loads(msg.value())).map(str)
+            self.writer.add_rows(fetched_data.to_dict(orient='records'))
+
 
 if __name__ == "__main__":
     consumer = DBConnectionHandler(
