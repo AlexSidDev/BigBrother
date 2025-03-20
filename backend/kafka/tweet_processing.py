@@ -9,6 +9,7 @@ from utils import delivery_report
 import sys
 sys.path.append('C:\\Studying\\BigBrother')
 from backend.inference.models import NerModel, ClassificationModel, BaseModel
+from datetime import datetime
 
 import os
 import psutil
@@ -67,8 +68,10 @@ class TweetProcessorConsumer:
         self._read_topic = read_topic
         with open('./configs/models_config.json', 'r') as config:
             self.models_config = json.load(config)
-        self.max_batch_size = 8
-        self.patience = 10
+        with open('./configs/application_config.json', 'r') as config:
+            self.app_config = json.load(config)
+        self.max_batch_size = self.app_config['max_batch_size']
+        self.patience = self.app_config['patience']
             
     @property
     def producer(self) -> Any:
@@ -130,7 +133,7 @@ class TweetProcessorConsumer:
         producer = self.producer
         models = self.models
         logger.info(f"Read data from {self._read_topic}")
-        messages = []
+        messages, dates = [], []
         last_infer = time.time()
         while True:
             msg = self._consumer.poll(10)
@@ -148,6 +151,7 @@ class TweetProcessorConsumer:
             df = df.transpose()
             raw_tweet = df["tokens"][0]
             messages.append(raw_tweet)
+            dates.append(df['date'][0] + ' ' + datetime.now().strftime('%H:%M:%S'))
 
             logger.debug(f"Raw tweet: {raw_tweet}")
             if len(messages) >= self.max_batch_size or (time.time() - last_infer) > self.patience:
@@ -156,12 +160,13 @@ class TweetProcessorConsumer:
                     data_to_send[name] = model(messages)
 
                 data_to_send["tweet"] = messages
+                data_to_send["time"] = dates
                 logger.debug(f"Data to send to database: {data_to_send}")
                 data_to_send = json.dumps(data_to_send)
                 producer.send(data_to_send)
 
                 last_infer = time.time()
-                messages = []
+                messages, dates = [], []
 
 
 if __name__ == "__main__":

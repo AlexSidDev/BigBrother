@@ -1,0 +1,6 @@
+{
+  "max_batch_size": 8,
+  "patience": 15,
+  "sleep": 10,
+  "start_date": "2021-01-01"
+}

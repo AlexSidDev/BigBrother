@@ -3,6 +3,7 @@ from confluent_kafka import Consumer
 from database_managers import DatabaseWriter
 import pandas as pd
 import json
+from datetime import datetime
 
 
 logger = logging.getLogger("db_connection_backend")
@@ -53,6 +54,7 @@ class DBConnectionHandler:
 
             logger.debug(f"Recieved message: {msg.value()}")
             fetched_data = pd.DataFrame.from_dict(json.loads(msg.value())).map(str)
+            fetched_data['time'] = fetched_data['time'].apply(lambda it: datetime.strptime(it, '%Y-%m-%d %H:%M:%S'))
             self.writer.add_rows(fetched_data.to_dict(orient='records'))
 
 
