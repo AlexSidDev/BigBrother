@@ -7,7 +7,7 @@ import json
 from utils import delivery_report
 
 import sys
-sys.path.append('C:\\Studying\\BigBrother')
+sys.path.append('/home/polina/BigBrother')
 from backend.inference.models import NerModel, ClassificationModel, BaseModel
 from datetime import datetime
 
@@ -151,7 +151,7 @@ class TweetProcessorConsumer:
             df = df.transpose()
             raw_tweet = df["tokens"][0]
             messages.append(raw_tweet)
-            dates.append(df['date'][0] + ' ' + datetime.now().strftime('%H:%M:%S'))
+            dates.append(df['date'][0][:10] + ' ' + datetime.now().strftime('%H:%M:%S'))
 
             logger.debug(f"Raw tweet: {raw_tweet}")
             if len(messages) >= self.max_batch_size or (time.time() - last_infer) > self.patience:
@@ -160,6 +160,7 @@ class TweetProcessorConsumer:
                     data_to_send[name] = model(messages)
 
                 data_to_send["tweet"] = messages
+                print(dates)
                 data_to_send["time"] = dates
                 logger.debug(f"Data to send to database: {data_to_send}")
                 data_to_send = json.dumps(data_to_send)

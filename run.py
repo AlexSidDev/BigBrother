@@ -28,7 +28,7 @@ logger.addHandler(console)
 class Application():
     def __init__(self) -> None:
         self.processes = {}
-        self.python = "./.venv/Scripts/python.exe"
+        self.python = "/home/polina/BigBrother/newenv/bin/python3.10"
     
     def docker_compose_up(self) -> None:
         logger.info("Run brokers")

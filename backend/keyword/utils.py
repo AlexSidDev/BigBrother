@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def extract_entities(tokens: list[str], labels: list[str], date: pd.Timestamp) -> pd.DataFrame:
+def extract_entities(tokens: list[str], labels: list[str], time: pd.Timestamp) -> pd.DataFrame:
 
     results = []
     entity = []
@@ -11,7 +11,7 @@ def extract_entities(tokens: list[str], labels: list[str], date: pd.Timestamp) -
     for token, label in zip(tokens, labels):
         if label.startswith('B-'):
             if entity:
-                results.append({'entity': ' '.join(entity), 'category': category, 'date': date})
+                results.append({'entity': ' '.join(entity), 'category': category, 'time': time})
                 entity = []
         
             category = label[2:]
@@ -21,7 +21,7 @@ def extract_entities(tokens: list[str], labels: list[str], date: pd.Timestamp) -
             entity.append(token)
     
     if entity:
-        results.append({'entity': ' '.join(entity), 'category': category, 'date': date})
+        results.append({'entity': ' '.join(entity), 'category': category, 'time': time})
 
     return results
 
@@ -30,21 +30,22 @@ def aggregate_entities(data: pd.DataFrame) -> pd.DataFrame:
     """
         Args:
             data (pd.DataFrame): dataset in the following format:
-                    tokens	            date	    bio_labels
+                    tokens	            time	    bio_labels
                 0	[Morning, 5km...	2019-10-13	[O, O, ...
                 1	[President,  ...	2019-11-03	[B-person, ...
                 2	[", I, 've, ...	    2020-05-31	[O, O, ...
 
         Returns:
             pd.DataFrame: output in the following format:
-                    entity	                        category	date
+                    entity	                        category	time
                 0	pinkoctober	                    event	    2019-10-13
                 1	breastcancerawareness	        event	    2019-10-13
                 2	Central Park , Desa Parkcity	location	2019-10-13
     """
+    print(data)
     entities = data.apply(lambda entry: extract_entities(tokens=entry.tokens, 
-                                                         labels=entry.NER_labels, 
-                                                         date=entry.date),
+                                                         labels=entry.ner, 
+                                                         time=entry.time),
                           axis=1)
     return pd.DataFrame([x for xs in entities for x in xs])
 

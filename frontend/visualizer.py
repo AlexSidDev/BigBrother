@@ -34,7 +34,7 @@ class Visualizer:
         }
 
     def barplot(self, statistic: dict, descripltion: str):
-        st.bar_chart(statistic, x_label=descripltion)
+        st.bar_chart(statistic, x_label=descripltion, horizontal=True)
 
     def colorful_text(self, words: list[str], ner_tags: list[str]):
         styled_text = ""
@@ -95,6 +95,6 @@ class Visualizer:
         cols = st.columns(n_cols)
         for index, row in data.reset_index().iterrows():
             with cols[index % n_cols]:
-                st.write(f"##### {row["date"]}")
-                self.colorful_text(row["tokens"], row["NER_labels"])
+                st.write(f"##### {row['time']}")
+                self.colorful_text(row['tokens'], row['ner'])
                 st.write(f"")
