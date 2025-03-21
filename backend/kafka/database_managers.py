@@ -2,18 +2,20 @@ from typing import Optional
 from sqlalchemy import DateTime, Column, func, create_engine, and_, select
 from sqlalchemy.orm import Mapped, mapped_column, Session
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import func
 from datetime import datetime
-
+import pandas as pd
 
 Base = declarative_base()
-db_location = "sqlite:///big_brother.db"
+db_location = "sqlite:///big_brother_new.db"
 
 
 class Tweet(Base):
-    __tablename__ = "processed_tweets"
+    __tablename__ = "tweets"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    time: Mapped[DateTime] = Column(DateTime(timezone=True), default=func.now())
+    time: Mapped[DateTime] = Column(
+        DateTime(timezone=True), default=func.now())
     tweet: Mapped[str]
     ner: Mapped[str]
     category: Mapped[Optional[str]]
@@ -44,22 +46,34 @@ class DatabaseReader:
         self.session = Session(self.engine)
 
     def read_interval(self, start: datetime, end: datetime = datetime.now()):
-        rows = self.session.query(Tweet).filter(and_(Tweet.time >= start, Tweet.time <= end))
-        return rows
+        print("STAAAART", start)
+        rows = self.session.query(Tweet).filter(
+            Tweet.time.between(start, end)).order_by(Tweet.time).all()
+        print(len(rows))
+        return self.rows2df(rows)
 
     def get_count(self):
         return self.session.query(Tweet).count()
 
     def get_start(self):
-        return self.session.query(Tweet.time, func.min(Tweet.time))
+        # return self.session.query(Tweet.time, func.min(Tweet.time))
+        min_time = self.session.query(func.min(Tweet.time)).scalar()
+        rows = self.session.query(Tweet).filter(
+            Tweet.time == min_time)
+        return self.rows2df(rows).iloc[0]
 
     def get_all(self):
-        return self.session.execute(select(Tweet.id,
-                                           Tweet.time,
-                                           Tweet.tweet,
-                                           Tweet.ner,
-                                           Tweet.category,
-                                           Tweet.sentiment)).all()
+        rows = self.session.query(Tweet).all()
+        return self.rows2df(rows)
 
     def close(self):
         self.session.close()
+
+    def rows2df(self, rows):
+        data = [row.__dict__ for row in rows]
+        for d in data:
+            d.pop('_sa_instance_state', None)
+
+        df = pd.DataFrame(data)
+        print(df)
+        return df

@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 import pandas as pd
-
+import time
 from streamlit_option_menu import option_menu
 
 from .db_connector import DBConnectionHandler
@@ -10,7 +10,7 @@ from .visualizer import Visualizer
 
 class StreamlitUI:
     def __init__(self) -> None:
-        self.db_handler = DBConnectionHandler("data/labeled_dataset.csv")
+        self.db_handler = DBConnectionHandler()
         self.visualizer = Visualizer()
         self.pages = {"General statistic": self.home_page,
                       "N twits": self.colorful_twits_for_category_page,
@@ -18,9 +18,11 @@ class StreamlitUI:
 
         self.days = {"All the time": 0, "Last day": 1,
                      "Last week": 7, "Last month": 30, "Last year": 365}
+        self.placeholder = None
 
     def run(self) -> None:
         st.set_page_config(page_title="Big Brother", layout="wide")
+
         page = option_menu(
             menu_title=None,
             options=list(self.pages.keys()),
@@ -42,12 +44,21 @@ class StreamlitUI:
 
             """
         )
-        number_of_tweets = self.db_handler.get_number_of_twits()
-        st.write("Number of collected tweets:", number_of_tweets)
-        self.NER_statistic_page()
-        self.NER_sentiment_page()
 
-    def NER_statistic_page(self):
+        # self.NER_statistic_page()
+        # self.NER_sentiment_page()
+
+        self.placeholder1 = st.empty()
+        NER_tags = self.db_handler.get_NER_tags()
+        st.text("")
+        st.markdown(
+            """
+            ## Sentiment distribution  
+            In this section# you can see sentiment distribution for named entity categories.
+            """
+        )
+        selected_tag = st.selectbox("Select named entity category", NER_tags)
+        self.placeholder2 = st.empty()
         st.write("## NER statistic")
         st.markdown(
             """
@@ -55,21 +66,34 @@ class StreamlitUI:
             """
         )
         period = st.selectbox("Select period", self.days.keys())
+        self.placeholder3 = st.empty()
+        while True:
+            number_of_tweets = self.db_handler.get_number_of_twits()
+            self.db_handler.get_updates()
+
+            with self.placeholder1.container():            
+                st.markdown(f"Number of collected tweets: *{number_of_tweets}*")
+
+            with self.placeholder2.container():  
+                self.NER_sentiment_page(selected_tag)
+
+            with self.placeholder3.container():  
+                self.NER_statistic_page(period)
+            
+            time.sleep(5)
+
+
+
+    def NER_statistic_page(self, period):
+        
         statistc = self.db_handler.get_NER_distrubution(self.days[period])
         self.visualizer.barplot(statistc, "NER tags")
 
-    def NER_sentiment_page(self):
-        st.write("## Sentiment distribution")
-        st.markdown(
-            """
-            In this section you can see sentiment distribution for named entity categories.
-            """
-        )
-        NER_tags = self.db_handler.get_NER_tags()
-        selected_tag = st.selectbox("Select named entity category", NER_tags)
+    def NER_sentiment_page(self, selected_tag):
         statistc = self.db_handler.get_sentiment_statistic_for_NER(
             selected_tag)
         self.visualizer.barplot(statistc, "Sentiment tags")
+        # placeholder.bar_chart(statistc)
 
     def colorful_twits_for_category_page(self):
         st.write("## Twits topics")
@@ -81,7 +105,7 @@ class StreamlitUI:
         catogories = self.db_handler.get_categories()
         selected_category = st.selectbox(f"Select topic", catogories)
         dates = self.visualizer.dates_selection(
-            self.db_handler.min_date, self.db_handler.start, self.db_handler.today)
+            self.db_handler.min_time, self.db_handler.start, self.db_handler.today)
 
         data = pd.DataFrame()
         if len(dates) == 2:
@@ -102,7 +126,7 @@ class StreamlitUI:
             """
         )
         dates = self.visualizer.dates_selection(
-            self.db_handler.min_date, self.db_handler.start, self.db_handler.today)
+            self.db_handler.min_time, self.db_handler.start, self.db_handler.today)
         relevant_ner_df = pd.DataFrame()
         if len(dates) == 2:
             start_period, end_period = dates
@@ -144,7 +168,7 @@ class StreamlitUI:
                     #### Sentiment distribution for selected entity:
                     """
                 )
-                statistic = data["sentiment_labels"].value_counts().to_dict()
+                statistic = data["sentiment"].value_counts().to_dict()
                 self.visualizer.barplot(statistic, "Sentiment tags")
         else:
             st.markdown("#### No twits in selected dates")
