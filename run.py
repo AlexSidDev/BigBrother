@@ -40,6 +40,10 @@ class Application():
 
     def start_processes(self) -> None:
         logger.info("Create processes")
+
+        self.processes['prefill'] = subprocess.Popen([self.python, "./backend/kafka/prefill_database.py"])
+        self.processes['prefill'].wait()
+
         self.processes["tweet_generating"] = subprocess.Popen([self.python, "./backend/kafka/tweet_generation.py"])
         self.processes["tweet_processing"] = subprocess.Popen([self.python, "./backend/kafka/tweet_processing.py"])
         self.processes["database"] = subprocess.Popen([self.python, "./backend/kafka/database.py"])

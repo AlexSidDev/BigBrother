@@ -1,4 +1,5 @@
 import ast
+from datetime import datetime
 import logging
 import pandas as pd
 import numpy as np
@@ -33,7 +34,9 @@ class TweetProducer:
             self.app_config = json.load(config)
         self._tweet_processor_host = tweet_processor_host
         self._tweet_processor_port = tweet_processor_port
+        start = self.app_config['start_date']
         self._data = pd.read_csv(data_path, converters={'tokens': ast.literal_eval})
+        self._data = self._data[self._data['date'] >= start]
         self._send_topic = send_topic
         self._sleep = sleep
         self.sleep_time = self.app_config['sleep']
