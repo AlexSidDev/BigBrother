@@ -71,21 +71,20 @@ class StreamlitUI:
             number_of_tweets = self.db_handler.get_number_of_twits()
             self.db_handler.get_updates()
 
-            with self.placeholder1.container():            
-                st.markdown(f"Number of collected tweets: *{number_of_tweets}*")
+            with self.placeholder1.container():
+                st.markdown(
+                    f"Number of collected tweets: *{number_of_tweets}*")
 
-            with self.placeholder2.container():  
+            with self.placeholder2.container():
                 self.NER_sentiment_page(selected_tag)
 
-            with self.placeholder3.container():  
+            with self.placeholder3.container():
                 self.NER_statistic_page(period)
-            
+
             time.sleep(5)
 
-
-
     def NER_statistic_page(self, period):
-        
+
         statistc = self.db_handler.get_NER_distrubution(self.days[period])
         self.visualizer.barplot(statistc, "NER tags")
 

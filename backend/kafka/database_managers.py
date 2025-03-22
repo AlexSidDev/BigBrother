@@ -46,10 +46,8 @@ class DatabaseReader:
         self.session = Session(self.engine)
 
     def read_interval(self, start: datetime, end: datetime = datetime.now()):
-        print("STAAAART", start)
         rows = self.session.query(Tweet).filter(
             Tweet.time.between(start, end)).order_by(Tweet.time).all()
-        print(len(rows))
         return self.rows2df(rows)
 
     def get_count(self):
@@ -75,5 +73,4 @@ class DatabaseReader:
             d.pop('_sa_instance_state', None)
 
         df = pd.DataFrame(data)
-        print(df)
         return df

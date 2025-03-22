@@ -31,7 +31,7 @@ class DBConnectionHandler:
 
         self.sentiment_statistic = dict(
             (el, {"negative": 0, "neutral": 0, "positive": 0}) for el in self.NER_tags_list)
-        
+
         self.extractor = KeywordExtractor(self.df)
 
         self.last_update = self.get_min_time()
@@ -58,9 +58,9 @@ class DBConnectionHandler:
         df = self.db_connector.read_interval(self.last_update)
         if (len(df)):
             df = self._preprocess(df)
-            self.last_update = df["time"].max() + datetime.timedelta(seconds=0.5)
+            self.last_update = df["time"].max(
+            ) + datetime.timedelta(seconds=0.5)
             self.updateSentimentStat(df)
-        
 
     def updateSentimentStat(self, df):
         for NER_tag in self.NER_tags_list:
@@ -69,7 +69,6 @@ class DBConnectionHandler:
             new_stat = filtered_data["sentiment"].value_counts().to_dict()
             for key, val in new_stat.items():
                 self.sentiment_statistic[NER_tag][key] += val
-        print(self.sentiment_statistic)
 
     def count_NER_distribution(self, df):
         labels_dict = dict(
@@ -109,7 +108,6 @@ class DBConnectionHandler:
         filtered_data = pd.DataFrame()
         if (len(df)):
             df = self._preprocess(df)
-            print(df.columns.tolist())
             filtered_data = df[df['category'] == category]
         if len(filtered_data) < N:
             return filtered_data
@@ -138,5 +136,5 @@ class DBConnectionHandler:
         if (len(df)):
             df = self._preprocess(df)
             filtered_data = self.df[self.df.tokens.apply(
-            lambda x: token in ' '.join(x))]
+                lambda x: token in ' '.join(x))]
         return filtered_data
