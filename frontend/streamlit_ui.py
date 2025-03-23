@@ -48,12 +48,14 @@ class StreamlitUI:
         self.placeholder = st.empty()
         self.placeholder1 = st.empty()
         NER_tags = db_handler.get_NER_tags()
-        st.text("")
         st.markdown(
             """
-            ## Sentiment distribution
-            # you can see sentiment distribution for named entity categories.
-            In this section
+            ##Sentiment distribution
+            """
+        )
+        st.markdown(
+            """
+            In this section you can see sentiment distribution for named entity categories.
             """
         )
         selected_tag = st.selectbox("Select named entity category", NER_tags)
@@ -129,12 +131,12 @@ class StreamlitUI:
             db_handler.min_time, db_handler.start, db_handler.end, db_handler.today)
         relevant_ner_df = pd.DataFrame()
         if len(dates) == 2:
-            db_handler.start , db_handler.end = dates
-
+            db_handler.start, db_handler.end = dates
             relevant_ner_df = db_handler.get_relevant_NER(
-                db_handler.start ,  db_handler.end)
+                db_handler.start,  db_handler.end)
 
         if len(relevant_ner_df):
+
             selected_entity = None
             n_rows = len(relevant_ner_df)
             cols = st.columns(n_rows, vertical_alignment="center")
