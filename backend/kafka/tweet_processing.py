@@ -3,7 +3,6 @@ import onnxruntime
 import psutil
 import os
 from datetime import datetime
-from backend.inference.models import NerModel, ClassificationModel, BaseModel
 import logging
 import time
 from typing import Any, Dict
@@ -15,8 +14,11 @@ from utils import delivery_report
 import sys
 sys.path.append('/home/polina/BigBrother')
 
+from backend.inference.models import NerModel, ClassificationModel, BaseModel
 
-logger = logging.getLogger("tweet_processing")
+
+
+logger = logging.getLogger("tweets")
 logger.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 console_formater = logging.Formatter("[ %(levelname)s ] %(message)s")

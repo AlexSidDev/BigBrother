@@ -6,6 +6,10 @@ from sqlalchemy import func
 from datetime import datetime
 import pandas as pd
 
+import logging
+
+logging.getLogger('sqlalchemy.engine.Engine').disabled = True
+
 Base = declarative_base()
 db_location = "sqlite:///big_brother_new.db"
 
@@ -59,6 +63,13 @@ class DatabaseReader:
         rows = self.session.query(Tweet).filter(
             Tweet.time == min_time)
         return self.rows2df(rows).iloc[0]
+    
+    def get_last(self):
+        # return self.session.query(Tweet.time, func.min(Tweet.time))
+        max_time = self.session.query(func.max(Tweet.time)).scalar()
+        rows = self.session.query(Tweet).filter(
+            Tweet.time == max_time)
+        return self.rows2df(rows).iloc[0]
 
     def get_all(self):
         rows = self.session.query(Tweet).all()
@@ -69,8 +80,8 @@ class DatabaseReader:
 
     def rows2df(self, rows):
         data = [row.__dict__ for row in rows]
-        for d in data:
-            d.pop('_sa_instance_state', None)
 
         df = pd.DataFrame(data)
+        df = df.drop("_sa_instance_state", axis=1, errors="ignore")
+
         return df

@@ -2,8 +2,9 @@ import ast
 from datetime import datetime
 import pandas as pd
 import json
+
 import sys
-sys.path.append('C:\\Studying\\BigBrother')
+sys.path.append('/home/polina/BigBrother')
 
 from backend.kafka.database_managers import DatabaseWriter
 
