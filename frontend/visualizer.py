@@ -94,6 +94,6 @@ class Visualizer:
         cols = st.columns(n_cols)
         for index, row in data.reset_index().iterrows():
             with cols[index % n_cols]:
-                st.write(f"##### {row['time']}")
+                st.write(f"##### { pd.to_datetime(row['time']).strftime('%Y-%m-%d')}")
                 self.colorful_text(row['tokens'], row['ner'])
                 st.write(f"")

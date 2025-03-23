@@ -64,6 +64,7 @@ class DBConnectionHandler:
     def get_updates(self):
         df = self.db_connector.read_interval(self.last_update).drop_duplicates()
         if (len(df)):
+            self.today = df["time"].max()
             df = self._preprocess(df)
             self.last_update = df["time"].max(
             ) + datetime.timedelta(seconds=0.5)
@@ -129,8 +130,12 @@ class DBConnectionHandler:
         return self.categories_list.keys()
 
     def get_relevant_NER(self, start_date, end_date) -> pd.DataFrame:
-        result = self.extractor.extract_relevant(start_date, end_date)
-        return pd.DataFrame(result)
+        df = self.db_connector.read_interval(start_date, end_date)
+        if (len(df)):
+            df = self._preprocess(df)
+            result = KeywordExtractor(df).extract_relevant(start_date, end_date)
+            return pd.DataFrame(result)
+        return pd.DataFrame()
 
     def get_min_time(self) -> datetime.datetime:
         df = self.db_connector.get_start()
@@ -145,6 +150,6 @@ class DBConnectionHandler:
         filtered_data = pd.DataFrame()
         if (len(df)):
             df = self._preprocess(df)
-            filtered_data = self.df[self.df.tokens.apply(
+            filtered_data = df[df.tokens.apply(
                 lambda x: token in ' '.join(x))]
         return filtered_data
