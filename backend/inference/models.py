@@ -67,15 +67,9 @@ class NerModel(BaseModel):
         self.convert_to_bio = lambda args: preds_to_bio(*args, self.id_2_label)
         self.replace_fn = partial(self.replace_url_username, url_token='{{URL}}', username_token=r'\1{\2@}')
 
-        self.mwtokenizer = nltk.MWETokenizer([tuple('{{') + ('URL',) + tuple('}}'),
-                                              tuple('{{') + ('USERNAME',) + tuple('}}'),
-                                              tuple("{@"), tuple("@}")],
-                                             separator='')
-
     def preprocess(self, raw_tweets: list):
         formatted_tweet = list(map(self.replace_fn, raw_tweets))
-        splitted_tweet = list(map(nltk.word_tokenize, formatted_tweet))
-        tokens = list(map(self.mwtokenizer.tokenize, splitted_tweet))
+        tokens = list(map(lambda tweet: tweet.split(' '), formatted_tweet))
         tokenized_inputs = self.tokenizer(tokens,
                                           max_length=self.max_len,
                                           truncation=True,

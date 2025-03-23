@@ -22,8 +22,13 @@
   },
   "category": {
     "path": "./onnx/category_model.onnx",
-    "id2label":{"0": "world", "1": "sport", "2": "business", "3":  "sci-tech"}
-  },
+    "id2label":{"0": "arts_&_culture",
+                "1": "business_&_entrepreneurs",
+                "2": "pop_culture",
+                "3": "daily_life",
+                "4": "sports_&_gaming",
+                "5": "science_&_technology"}
+              },
   "sentiment": {
     "path": "./onnx/sentiment_model.onnx",
     "id2label":{"0": "negative", "1": "neutral", "2": "positive"}

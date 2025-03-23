@@ -119,7 +119,7 @@ class TweetProcessorConsumer:
         sent_model = ClassificationModel(
             sent_model, tokenizer, self.models_config['sentiment']['id2label'])
 
-        model_name = "lucasresck/bert-base-cased-ag-news"
+        model_name = "cardiffnlp/roberta-base-tweet-topic-single-all"
         class_model = self.create_onnx_session(
             self.models_config['category']['path'])
         tokenizer = AutoTokenizer.from_pretrained(

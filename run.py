@@ -49,8 +49,8 @@ class Application():
         self.processes["database"] = subprocess.Popen([self.python, "./backend/kafka/database.py"])
 
         #TODO (@a.klykov) add code to start streamlit
-        # self.processes["visualization"] = subprocess.Popen([self.python, "-m", "streamlit", "run", 
-        #                                                     "./app/frontend/visualization_consumer/visualization_consumer.py"])
+        self.processes["visualization"] = subprocess.Popen([self.python, "-m", "streamlit", "run",
+                                                            "./run_UI.py"])
 
     def stop_processes(self) -> None:
         for name, process in self.processes.items():

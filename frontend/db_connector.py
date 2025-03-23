@@ -14,21 +14,17 @@ class DBConnectionHandler:
     def __init__(self) -> None:
         self.db_connector = DatabaseReader()
 
-        self.mwtokenizer = nltk.MWETokenizer([tuple('{{') + ('URL',) + tuple('}}'),
-                                              tuple(
-                                                  '{{') + ('USERNAME',) + tuple('}}'),
-                                              tuple("{@"), tuple("@}")],
-                                             separator='')
-
-        self.df = self._preprocess(self.db_connector.get_all())
+        self.df = DBConnectionHandler._preprocess(self.db_connector.get_all())
 
         self.NER_tags_list = ['corporation', 'creative_work',
                               'event', 'group', 'location', 'person', 'product']
         self.sentiment_tags_list = ['negative', 'positive', 'neutral']
-        self.categories_list = {"world": "LABEL_0",
-                                "sport": "LABEL_1",
-                                "business": "LABEL_2",
-                                "sci-tech": "LABEL_3"}
+        self.categories_list = {"arts_&_culture": "LABEL_0",
+                                "business_&_entrepreneurs": "LABEL_1",
+                                "pop_culture": "LABEL_2",
+                                "daily_life": "LABEL_3",
+                                "sports_&_gaming": "LABEL_4",
+                                "science_&_technology": "LABEL_5"}
 
         self.sentiment_statistic = dict(
             (el, {"negative": 0, "neutral": 0, "positive": 0}) for el in self.NER_tags_list)
@@ -47,14 +43,10 @@ class DBConnectionHandler:
             datetime.timedelta(days=min(7, (self.today - self.min_time).days))
         self.end = self.today
 
-    def _preprocess(self, data) -> pd.DataFrame:
-        def preprocess_twits(twit):
-            splitted_tweet = nltk.word_tokenize(twit)
-            twit = self.mwtokenizer.tokenize(splitted_tweet)
-            return twit
-    
+    @staticmethod
+    def _preprocess(data) -> pd.DataFrame:
 
-        data["tokens"] = data["tweet"].apply(preprocess_twits)
+        data["tokens"] = data["tweet"].apply(lambda tweet: tweet.split(' '))
 
         data["ner"] = data["ner"].apply(
             lambda tag: ast.literal_eval(tag) if type(tag) == str else tag)
