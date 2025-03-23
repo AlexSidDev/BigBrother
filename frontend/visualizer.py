@@ -33,8 +33,8 @@ class Visualizer:
             "product": "rgba(135, 206, 250, 0.3)",
         }
 
-    def barplot(self, statistic: dict, descripltion: str):
-        st.bar_chart(statistic, x_label=descripltion)
+    def barplot(self, statistic: dict, x_descripltion: str, y_descripltion: str):
+        st.bar_chart(statistic, x_label=x_descripltion,  y_label=y_descripltion,horizontal=True)
 
     def colorful_text(self, words: list[str], ner_tags: list[str]):
         styled_text = ""
@@ -76,11 +76,10 @@ class Visualizer:
                                 </div>
                             """, unsafe_allow_html=True)
 
-    def dates_selection(self, min_date, start, max_date):
-
+    def dates_selection(self, min_date, start, end, max_date):
         dates = st.date_input(
             "Select period",
-            (start, max_date),
+            (start, end),
             min_date,
             max_date,
             format="YYYY/MM/DD",
@@ -95,6 +94,6 @@ class Visualizer:
         cols = st.columns(n_cols)
         for index, row in data.reset_index().iterrows():
             with cols[index % n_cols]:
-                st.write(f"##### {row["date"]}")
-                self.colorful_text(row["tokens"], row["NER_labels"])
+                st.write(f"##### {row['time']}")
+                self.colorful_text(row['tokens'], row['ner'])
                 st.write(f"")
