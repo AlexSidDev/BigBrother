@@ -28,7 +28,7 @@ class DBConnectionHandler:
 
         self.sentiment_statistic = dict(
             (el, {"negative": 0, "neutral": 0, "positive": 0}) for el in self.NER_tags_list)
-        
+
         self.ner_statistic = dict(
             zip(self.NER_tags_list, [0] * len(self.NER_tags_list)))
 
@@ -46,8 +46,10 @@ class DBConnectionHandler:
     @staticmethod
     def _preprocess(data) -> pd.DataFrame:
 
-        data["tokens"] = data["tweet"].apply(lambda tweet: tweet.split(' '))
-
+        def preprocess_twits(twit):
+                pieces = [p for p in re.split("( |\\{@.*?\\@}|'.*?')", twit) if p.strip()]
+                return pieces
+        data["tokens"] = data["tweet"].apply(preprocess_twits)
         data["ner"] = data["ner"].apply(
             lambda tag: ast.literal_eval(tag) if type(tag) == str else tag)
         data["time"] = pd.to_datetime(data["time"])
