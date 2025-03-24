@@ -54,8 +54,7 @@ class TweetProducer:
         logger.info(f"Start sending data from TweetProducer to TweetProcessor with following ip {self._tweet_processor_host}:{self._tweet_processor_port}")
         while True:
             df_entry = self._data.iloc[ind, :]
-            df_entry['tokens'] = ' '.join(df_entry['tokens'])
-            # df_entry['tokens'] = df_entry['tokens']
+            df_entry['tokens'] = str(df_entry['tokens'])
             data = df_entry.to_json()
             self._producer.produce(self._send_topic, value=data)
             self._producer.flush()

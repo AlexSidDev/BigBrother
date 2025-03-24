@@ -48,6 +48,7 @@ class ClassificationModel(BaseModel):
         self.replace_fn = partial(self.replace_url_username, url_token='http', username_token='@user')
 
     def preprocess(self, raw_tweets: list):
+        raw_tweets = list(map(" ".join, raw_tweets))
         formatted_tweet = list(map(self.replace_fn, raw_tweets))
         tokenized_inputs = self.tokenizer(formatted_tweet,
                                           max_length=self.max_len,
@@ -68,9 +69,7 @@ class NerModel(BaseModel):
         self.replace_fn = partial(self.replace_url_username, url_token='{{URL}}', username_token=r'\1{\2@}')
 
     def preprocess(self, raw_tweets: list):
-        formatted_tweet = list(map(self.replace_fn, raw_tweets))
-        tokens = list(map(lambda tweet: tweet.split(' '), formatted_tweet))
-        tokenized_inputs = self.tokenizer(tokens,
+        tokenized_inputs = self.tokenizer(raw_tweets,
                                           max_length=self.max_len,
                                           truncation=True,
                                           padding=True,

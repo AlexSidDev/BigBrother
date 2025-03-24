@@ -42,7 +42,6 @@ def aggregate_entities(data: pd.DataFrame) -> pd.DataFrame:
                 1	breastcancerawareness	        event	    2019-10-13
                 2	Central Park , Desa Parkcity	location	2019-10-13
     """
-    print(data)
     entities = data.apply(lambda entry: extract_entities(tokens=entry.tokens, 
                                                          labels=entry.ner, 
                                                          time=entry.time),

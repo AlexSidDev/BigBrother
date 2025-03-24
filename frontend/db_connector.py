@@ -46,7 +46,7 @@ class DBConnectionHandler:
     @staticmethod
     def _preprocess(data) -> pd.DataFrame:
 
-        data["tokens"] = data["tweet"].apply(lambda tweet: tweet.split(' '))
+        data["tokens"] = data["tweet"].apply(ast.literal_eval)
 
         data["ner"] = data["ner"].apply(
             lambda tag: ast.literal_eval(tag) if type(tag) == str else tag)

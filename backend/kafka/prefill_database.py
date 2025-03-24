@@ -16,7 +16,7 @@ class PreFiller:
         self.writer = DatabaseWriter()
         self.data = pd.read_csv(labeled_data_path, converters={'tokens': ast.literal_eval})
         self.data['time'] = self.data['date'].apply(PreFiller.convert_data)
-        self.data['tweet'] = self.data['tokens'].apply(' '.join)
+        self.data['tweet'] = self.data['tokens'].apply(str)
         self.data.drop(columns=['tokens', 'date', 'id'], inplace=True)
         with open(config_path, 'r') as config:
             self.start_date = PreFiller.convert_data(json.load(config)["start_date"])

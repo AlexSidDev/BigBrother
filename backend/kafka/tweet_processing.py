@@ -1,3 +1,5 @@
+import ast
+
 from transformers import AutoTokenizer
 import onnxruntime
 import psutil
@@ -163,7 +165,7 @@ class TweetProcessorConsumer:
 
             df = pd.read_json(msg.value().decode('utf-8'), orient="index")
             df = df.transpose()
-            raw_tweet = df["tokens"][0]
+            raw_tweet = ast.literal_eval(df["tokens"][0])
             messages.append(raw_tweet)
             dates.append(df['date'][0][:10] + ' ' +
                          datetime.now().strftime('%H:%M:%S'))
@@ -174,7 +176,7 @@ class TweetProcessorConsumer:
                 for name, model in models.items():
                     data_to_send[name] = model(messages)
 
-                data_to_send["tweet"] = messages
+                data_to_send["tweet"] = list(map(str, messages))
                 data_to_send["time"] = dates
                 logger.debug(f"Data to send to database: {data_to_send}")
                 data_to_send = json.dumps(data_to_send)
